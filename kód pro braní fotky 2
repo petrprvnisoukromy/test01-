@@ -1,0 +1,16 @@
+from picamera import PiCamera
+from time import sleep
+
+camera = PiCamera()
+sekvence = (22)
+# Start the camera preview
+while sekvence < (23) == True:
+
+camera.start_preview()
+# Take the photo and save it as 'image.jpg'
+camera.capture('image.jpg')
+time.sleep(2)
+# Stop the camera preview
+camera.stop_preview()
+if sekvence > (23):
+    break   
