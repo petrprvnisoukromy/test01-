@@ -1,0 +1,19 @@
+from picamera import PiCamera
+from time import sleep
+
+camera = PiCamera()
+# Start the camera preview
+camera.start_preview()
+
+# Counter to keep track of the number of photos taken
+counter = 0
+
+# Loop to take photos until 5 photos are taken
+while counter < 5:
+    # Take the photo and save it with a unique name
+    camera.capture('image_%s.jpg' % counter)
+    counter += 1
+    time.sleep(2)
+
+# Stop the camera preview
+camera.stop_preview()
