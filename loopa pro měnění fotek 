@@ -1,22 +1,79 @@
-for i in range(counter):
-    # read in the image
-    img_filename = f"image_{i}.jpg"
-    img = cv2.imread(img_filename)
+import numpy as np
+import cv2
+from matplotlib import pyplot as plt
+import sys
+sys.path.append('/Users/miker/python/02/NDVI/')
+import fastiecm
+import io 
+import picamera as Picamera 
+import time
+
+fastiecm = 11
+
+def contrast_stretch(im):
+    in_min = np.percentile(im, 2)
+    in_max = np.percentile(im, 90)
+
+    out_min = 10.0
+    out_max = 230.0
+
+    out = im - in_min
+    out *= ((out_max - out_min) / (in_max - in_min))
+    out += out_min
+
+    return out
+
+# Function to calculate NDVI of an image
+def calc_ndvi(image):
+    b, g, r = cv2.split(image)
+    bottom = (r.astype(float) + b.astype(float))
+    bottom[bottom==0] = 0.01
+    ndvi = (b.astype(float) - r) / bottom
+    return ndvi
+
+camera = Picamera()
+camera.start_preview()
+camera.resolution = (1600, 900)
+                  
+counter = 0 
+while True:
+    stream = io.BytesIO()
+    camera.capture(stream, format='jpeg')
+    data = np.frombuffer(stream.getvalue(), dtype=np.uint8)
+    image = cv2.imdecode(data, 1)
 
     # apply contrast stretch
-    contrasted = contrast_stretch(img)
-
-    # calculate NDVI
-    ndvi = calc_ndvi(contrasted)
-
-    # apply contrast stretch to NDVI
-    ndvi_contrasted = contrast_stretch(ndvi)
-
-    # Normalize the array to a range of [0, 255]
-    color_mapped_prep = (0.95*ndvi_contrasted).astype(np.uint8)
-
-    # apply color map
-    color_mapped_image = cv2.applyColorMap(color_mapped_prep, fastiecm)
+    contrasted = contrast_stretch(image)
 
     # save the image
-    cv2.imwrite(f'color_mapped_image_{i}.png', color_mapped_image)
+    cv2.imwrite("image_%s.jpg" % counter, contrasted)
+    
+    time.sleep(2)
+    counter += 1
+    if counter == 5:
+        break
+
+    for i in range(counter):
+        # read in the image
+        img_filename = f"image_{i}.jpg"
+        img = cv2.imread(img_filename)
+
+        # apply contrast stretch
+        contrasted = contrast_stretch(img)
+
+        # calculate NDVI
+        ndvi = calc_ndvi(contrasted)
+
+        # apply contrast stretch to NDVI
+        ndvi_contrasted = contrast_stretch(ndvi)
+
+        # Normalize the array to a range of [0, 255]
+        color_mapped_prep = (0.95*ndvi_contrasted).astype(np.uint8)
+
+        # apply color map
+        color_mapped_image = cv2.applyColorMap(color_mapped_prep, fastiecm)
+
+        # save the image
+        cv2.imwrite(f'color_mapped_image_{i}.png', color_mapped_image)
+
+camera.stop_preview()
